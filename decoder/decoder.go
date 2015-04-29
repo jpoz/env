@@ -1,4 +1,4 @@
-package env_struct
+package decoder
 
 import (
 	"errors"

@@ -1,4 +1,4 @@
-## env_struct
+## env/decoder
 
 Decode Structs from the Environment
 
@@ -6,7 +6,7 @@ Decode Structs from the Environment
 package main
 
 import (
-  "github.com/jpoz/env_struct"
+  "github.com/jpoz/env/decoder"
 )
 
 type Config struct {
@@ -17,7 +17,7 @@ type Config struct {
 func main() {
   config := Config{}
 
-  env_struct.Decode(config)
+  decoder.Decode(config)
 
   fmt.Printf("%s running in %s", config.Addr, config.Env)
 }
