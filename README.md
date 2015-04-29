@@ -10,8 +10,8 @@ import (
 )
 
 type Config struct {
-  Host string `env:"HOST" default"localhost"`
-  Env string `env:"ENV" default"development"`
+  Env string `env:"ENV"`
+  Addr string `expand:"$HOST:$PORT"`
 }
 
 func main() {
@@ -19,11 +19,11 @@ func main() {
 
   env_struct.Decode(config)
 
-  fmt.Printf("%s running in %s", config.Host, config.Env)
+  fmt.Printf("%s running in %s", config.Addr, config.Env)
 }
 ```
 
 ```
-$ ENV=dev go run main.go
-localhost running in dev
+$ PORT=9999 ENV=dev go run main.go
+:9999 running in dev
 ```
