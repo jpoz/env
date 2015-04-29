@@ -1,46 +1,68 @@
 package env_struct
 
 import (
-	"fmt"
+	"errors"
 	"os"
 	"reflect"
+	"strings"
 )
 
-func Decode(obj interface{}) {
-	objValues := reflect.ValueOf(obj).Elem()
-	objType := reflect.TypeOf(obj).Elem()
+var (
+	ErrNoStructPointer = errors.New("Must pass a struct pointer to Decode")
+)
 
-	if objType.Kind() == reflect.Ptr {
-		fmt.Printf("%v must be a pointer\n", obj)
-		return
+// Decode reads the current environment and stores it in the value pointed to
+// by v.
+//
+//
+func Decode(v interface{}) error {
+	typ := reflect.TypeOf(v)
+	if typ.Kind() != reflect.Ptr {
+		return ErrNoStructPointer
 	}
 
-	if objType.Kind() != reflect.Struct {
-		fmt.Printf("%v type can't have attributes inspected\n", objType.Kind())
-		return
+	typ = typ.Elem()
+	if typ.Kind() != reflect.Struct {
+		return ErrNoStructPointer
 	}
 
-	for i := 0; i < objType.NumField(); i++ {
-		field := objType.Field(i)
-		name := field.Tag.Get("env")
+	values := reflect.ValueOf(v).Elem()
 
-		objValue := objValues.FieldByName(field.Name)
+	for i := 0; i < typ.NumField(); i++ {
+		field := typ.Field(i)
+		// TODO check if struct
 
-		if name != "" {
-			// If IsValid and CanSet are not true we will panic
-			if objValue.IsValid() && objValue.CanSet() {
+		envVar := field.Tag.Get("env")
+		if envVar == "" {
+			envVar = strings.ToUpper(field.Name)
+		}
+		expandString := field.Tag.Get("expand")
 
-				// Set value
-				in := objValue.Interface()
+		val := values.FieldByName(field.Name)
+
+		// If IsValid and CanSet are not true we will panic
+		if val.IsValid() && val.CanSet() {
+			if expandString != "" {
+				in := val.Interface()
 				switch in.(type) {
 				case string:
-					val := os.Getenv(name)
-					if val == "" {
-						val = field.Tag.Get("default")
+					envVal := os.ExpandEnv(expandString)
+					if envVal != "" {
+						val.SetString(envVal)
 					}
-					objValue.SetString(val)
+				}
+			} else {
+				in := val.Interface()
+				switch in.(type) {
+				case string:
+					envVal := os.Getenv(envVar)
+					if envVal != "" {
+						val.SetString(envVal)
+					}
 				}
 			}
 		}
 	}
+
+	return nil
 }

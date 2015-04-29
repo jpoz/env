@@ -2,7 +2,7 @@
 
 Decode Structs from the Environment
 
-```golang
+```go
 package main
 
 import (
