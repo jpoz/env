@@ -7,6 +7,11 @@ import (
 	"strings"
 )
 
+const (
+	envTagKey    = "env"
+	expandTagKey = "expand"
+)
+
 var (
 	ErrNoStructPointer = errors.New("Must pass a struct pointer to Decode")
 )
@@ -28,41 +33,42 @@ func Decode(v interface{}) error {
 
 	values := reflect.ValueOf(v).Elem()
 
-	for i := 0; i < typ.NumField(); i++ {
-		field := typ.Field(i)
-		// TODO check if struct
-
-		envVar := field.Tag.Get("env")
-		if envVar == "" {
-			envVar = strings.ToUpper(field.Name)
-		}
-		expandString := field.Tag.Get("expand")
-
-		val := values.FieldByName(field.Name)
-
-		// If IsValid and CanSet are not true we will panic
-		if val.IsValid() && val.CanSet() {
-			if expandString != "" {
-				in := val.Interface()
-				switch in.(type) {
-				case string:
-					envVal := os.ExpandEnv(expandString)
-					if envVal != "" {
-						val.SetString(envVal)
-					}
-				}
-			} else {
-				in := val.Interface()
-				switch in.(type) {
-				case string:
-					envVal := os.Getenv(envVar)
-					if envVal != "" {
-						val.SetString(envVal)
-					}
-				}
-			}
-		}
-	}
+	traverse(typ, values)
 
 	return nil
+}
+
+func traverse(typ reflect.Type, values reflect.Value) {
+	for i := 0; i < typ.NumField(); i++ {
+		field := typ.Field(i)
+		val := values.FieldByName(field.Name)
+
+		switch val.Kind() {
+		case reflect.String:
+			setString(field, val)
+		case reflect.Struct:
+			traverse(field.Type, val)
+		}
+	}
+}
+
+func setString(field reflect.StructField, val reflect.Value) {
+	envVar := field.Tag.Get(envTagKey)
+	if envVar == "" {
+		envVar = strings.ToUpper(field.Name)
+	}
+	expandString := field.Tag.Get(expandTagKey)
+
+	// If IsValid and CanSet are not true we will panic
+	if val.IsValid() && val.CanSet() {
+		var envVal string
+		if expandString != "" {
+			envVal = os.ExpandEnv(expandString)
+		} else {
+			envVal = os.Getenv(envVar)
+		}
+		if envVal != "" {
+			val.SetString(envVal)
+		}
+	}
 }
