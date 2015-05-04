@@ -17,6 +17,13 @@ type Bar struct {
 	Foo Foo
 }
 
+type Muc struct {
+	Lup   int   `env:"LUP"`
+	Lup32 int32 `env:"LUP"`
+	Lup64 int64 `env:"LUP"`
+	Tup   bool  `env:"PUP"`
+}
+
 func TestDecode(t *testing.T) {
 	foo := &Foo{
 		Boo: "0",
@@ -66,5 +73,22 @@ func TestDecode(t *testing.T) {
 	}
 	if want, got := "5", bar.Tar; want != got {
 		t.Errorf("bar.Tar should have been %q, got %q", want, got)
+	}
+
+	os.Setenv("LUP", "800")
+	os.Setenv("PUP", "true")
+	muc := &Muc{}
+	Decode(muc)
+	if want, got := int(800), muc.Lup; want != got {
+		t.Errorf("muc.Lup should have been %d, got %d", want, got)
+	}
+	if want, got := int32(800), muc.Lup32; want != got {
+		t.Errorf("muc.Lup should have been %d, got %d", want, got)
+	}
+	if want, got := int64(800), muc.Lup64; want != got {
+		t.Errorf("muc.Lup should have been %d, got %d", want, got)
+	}
+	if want, got := true, muc.Tup; want != got {
+		t.Errorf("muc.Tup should have been %v, got %v", want, got)
 	}
 }
