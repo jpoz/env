@@ -1,8 +1,3 @@
-## env/decoder
-
-Decode Structs from the Environment
-
-```go
 package main
 
 import (
@@ -25,9 +20,3 @@ func main() {
 	fmt.Printf("%s running in %s with %d workers",
 		config.Addr, config.Env, config.Workers)
 }
-```
-
-```
-$ HOST=hello PORT=9000 ENV=dev WORKERS=123 go run example.go
-hello:9000 running in dev with 123 workers
-```
