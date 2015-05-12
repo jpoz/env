@@ -1,6 +1,7 @@
 package decoder
 
 import (
+	"fmt"
 	"os"
 	"testing"
 )
@@ -22,6 +23,24 @@ type Muc struct {
 	Lup32 int32 `env:"LUP"`
 	Lup64 int64 `env:"LUP"`
 	Tup   bool  `env:"PUP"`
+}
+
+func ExampleDecode() {
+	type Config struct {
+		Addr    string `expand:"${HOST}:${PORT}"`
+		Workers int    `env:"WORKERS"`
+		Debug   bool
+	}
+
+	os.Setenv("PORT", "8888")
+	os.Setenv("WORKERS", "9")
+	os.Setenv("DEBUG", "true")
+
+	config := Config{}
+	Decode(&config)
+
+	fmt.Println(config)
+	// Output: {:8888 9 true}
 }
 
 func TestDecode(t *testing.T) {

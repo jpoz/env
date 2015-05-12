@@ -17,12 +17,17 @@ var (
 	ErrNoStructPointer = errors.New("Must pass a struct pointer to Decode")
 )
 
-// Decode reads the current environment variables and stores variables values
+// Decode reads the current environment variables and stores values
 // pointed to by v.
 //
 // Supported value types are: bool, int, int8, int16, int32, int64, string
 // struct
 //
+// Two tags are supported: `env` and `expand`
+//
+// The env tag will use `os.Getenv'. The expand tag will use `os.Expandenv`
+// If the computed value of the environment is empty Decode will not
+// change the value of the field.
 func Decode(v interface{}) error {
 	typ := reflect.TypeOf(v)
 	if typ.Kind() != reflect.Ptr {
