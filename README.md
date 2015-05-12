@@ -19,7 +19,9 @@ type Config struct {
 }
 
 func main() {
-	config := Config{}
+	config := Config{
+    Env: "dev", // default if ENV is not set
+  }
 
 	decoder.Decode(&config)
 
@@ -29,6 +31,6 @@ func main() {
 ```
 
 ```
-$ HOST=hello PORT=9000 ENV=dev WORKERS=123 go run example.go
+$ HOST=hello PORT=9000 WORKERS=123 go run example.go
 hello:9000 running in dev with 123 workers
 ```
