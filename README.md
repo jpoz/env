@@ -1,6 +1,7 @@
 ## env/decoder
-
 Decode Structs from the Environment
+
+[![GoDoc](https://godoc.org/github.com/jpoz/env/decoder?status.svg)](https://godoc.org/github.com/jpoz/env/decoder)
 
 ```go
 package main
