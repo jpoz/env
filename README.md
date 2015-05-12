@@ -20,8 +20,8 @@ type Config struct {
 
 func main() {
 	config := Config{
-    Env: "dev", // default if ENV is not set
-  }
+    		Env: "dev", // default if ENV is not set
+  	}
 
 	decoder.Decode(&config)
 
