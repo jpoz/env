@@ -91,4 +91,10 @@ func TestDecode(t *testing.T) {
 	if want, got := true, muc.Tup; want != got {
 		t.Errorf("muc.Tup should have been %v, got %v", want, got)
 	}
+
+	os.Setenv("PUP", "NOTABOOL")
+	err := Decode(muc)
+	if err == nil {
+		t.Error("Bool parse of should of raised error but did not")
+	}
 }

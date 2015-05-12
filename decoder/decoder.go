@@ -20,11 +20,9 @@ var (
 // Decode reads the current environment variables and stores variables values
 // pointed to by v.
 //
-// Supported value types are:
-//  - bool
-//  - int, int8, int16, int32, int64
-//  - string
-//  - struct
+// Supported value types are: bool, int, int8, int16, int32, int64, string
+// struct
+//
 func Decode(v interface{}) error {
 	typ := reflect.TypeOf(v)
 	if typ.Kind() != reflect.Ptr {
@@ -38,37 +36,48 @@ func Decode(v interface{}) error {
 
 	values := reflect.ValueOf(v).Elem()
 
-	traverse(typ, values)
-
-	return nil
+	return traverse(typ, values)
 }
 
-func traverse(typ reflect.Type, values reflect.Value) {
+func traverse(typ reflect.Type, values reflect.Value) error {
+	err := NewError()
 	for i := 0; i < typ.NumField(); i++ {
 		field := typ.Field(i)
 		val := values.FieldByName(field.Name)
 
 		if val.IsValid() && val.CanSet() {
+			var e error
+
 			switch val.Kind() {
 			case reflect.Bool:
-				setBool(field, val)
+				e = setBool(field, val)
 			case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
-				setInt(field, val)
+				e = setInt(field, val)
 			case reflect.String:
-				setString(field, val)
+				e = setString(field, val)
 			case reflect.Struct:
-				traverse(field.Type, val)
+				e = traverse(field.Type, val)
+			}
+
+			if e != nil {
+				err.Errors[field.Name] = e
 			}
 		}
 	}
+
+	if len(err.Errors) != 0 {
+		return err
+	}
+	return nil
 }
 
-func setBool(field reflect.StructField, val reflect.Value) {
+func setBool(field reflect.StructField, val reflect.Value) error {
 	envVal := fieldValue(field)
 	boolVal, err := convertToBool(envVal)
 	if err == nil {
 		val.SetBool(boolVal)
 	}
+	return err
 }
 
 func convertToBool(envVal *string) (boolVal bool, err error) {
@@ -78,19 +87,21 @@ func convertToBool(envVal *string) (boolVal bool, err error) {
 	return
 }
 
-func setString(field reflect.StructField, val reflect.Value) {
+func setString(field reflect.StructField, val reflect.Value) error {
 	envVal := fieldValue(field)
 	if envVal != nil {
 		val.SetString(*envVal)
 	}
+	return nil
 }
 
-func setInt(field reflect.StructField, val reflect.Value) {
+func setInt(field reflect.StructField, val reflect.Value) error {
 	envVal := fieldValue(field)
 	intVal, err := convertToInt64(envVal)
 	if err == nil {
 		val.SetInt(intVal)
 	}
+	return err
 }
 
 func convertToInt64(envVal *string) (intVal int64, err error) {
